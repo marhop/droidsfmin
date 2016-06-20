@@ -21,8 +21,7 @@ filterSigFile ps e = replaceChildren e [isc', ffc']
         ids  = concatMap sigIDs $ findChildren (sfQName "FileFormat") ffc'
 
 replaceChildren :: Element -> [Element] -> Element
-replaceChildren e cs =
-    Element (elName e) (elAttribs e) (map Elem cs) (elLine e)
+replaceChildren e cs = e { elContent = map Elem cs }
 
 filterChildrenByAttr :: String -> [String] -> Element -> [Element]
 filterChildrenByAttr a vs = filterChildren (f . findAttr (unqual a))
