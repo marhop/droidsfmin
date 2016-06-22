@@ -5,8 +5,11 @@ import Text.XML.Light
 -- | Filter an XML string representing a DROID signature file based on a list
 -- of PUIDs. Only those entries (file format and internal signature
 -- descriptions) that are necessary to identify files with one of the given
--- PUIDs will occur in the resulting XML string.
+-- PUIDs will occur in the resulting XML string. With an empty list of PUIDs,
+-- the input XML string is returned unmodified.
 filterSigFile :: [String] -> String -> String
+filterSigFile []    xml = xml
+filterSigFile _     ""  = ""
 filterSigFile puids xml = case parseXMLDoc xml of
     Nothing -> error "Failed to parse signature file."
     Just e  -> showTopElement $ replaceChildren e [isc', ffc']
