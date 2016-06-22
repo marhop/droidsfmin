@@ -13,17 +13,19 @@ header progName = "Usage: " ++ progName ++ " [options] [signature file]"
 
 -- | Data type for command line options.
 data Options = Options
-    { optHelp    :: Bool
-    , optPuids   :: [String]
-    , optOutFile :: Maybe FilePath
+    { optHelp      :: Bool
+    , optPuids     :: [String]
+    , optPuidsFile :: Maybe FilePath
+    , optOutFile   :: Maybe FilePath
     } deriving (Show)
 
 -- | Default vaules for command line options.
 defaultOptions :: Options
 defaultOptions = Options
-    { optHelp    = False
-    , optPuids   = []
-    , optOutFile = Nothing
+    { optHelp      = False
+    , optPuids     = []
+    , optPuidsFile = Nothing
+    , optOutFile   = Nothing
     }
 
 -- | Description of the command line options and how to merge the supplied
@@ -34,12 +36,14 @@ options =
         (NoArg (\opts -> opts { optHelp = True }))
         "show help message"
     , Option ['p'] ["puid"]
-        (ReqArg (\p opts -> opts { optPuids = p:(optPuids opts) }) "PUID")
+        (ReqArg (\p opts -> opts { optPuids = p : optPuids opts }) "PUID")
         "PUID to include in the output"
+    , Option ['P'] ["puids-from-file"]
+        (ReqArg (\f opts -> opts { optPuidsFile = Just f }) "FILE")
+        "like -p, but read list of PUIDs from file (one PUID per line)"
     , Option ['o'] ["output"]
-        (ReqArg (\o opts -> opts { optOutFile = Just o }) "FILE")
+        (ReqArg (\f opts -> opts { optOutFile = Just f }) "FILE")
         "output file"
-    -- TODO Add -P option to read PUIDs from file.
     ]
 
 -- | Parse command line options.
@@ -54,17 +58,29 @@ input :: Maybe FilePath -> IO String
 input (Just f) = readFile f
 input Nothing  = getContents
 
+-- | Read from a file or return an empty string if no file is specified.
+input' :: Maybe FilePath -> IO String
+input' (Just f) = readFile f
+input' Nothing  = return ""
+
 -- | Write to a file or to STDOUT if no file is specified.
 output :: Maybe FilePath -> String -> IO ()
 output (Just f) = writeFile f
 output Nothing  = putStrLn
 
+-- | Collect PUIDs from command line options -p and -P.
+collectPuids :: Options -> IO [String]
+collectPuids opts = do
+    content <- input' $ optPuidsFile opts
+    return $ optPuids opts ++ lines content
+
 main = do
     prg <- getProgName
-    (opts, file) <- getArgs >>= parseArgs (header prg)
+    (opts, sigFile) <- getArgs >>= parseArgs (header prg)
     when (optHelp opts) $ do
         putStr $ usageInfo (header prg) options
         exitSuccess
-    content <- input file
-    output (optOutFile opts) $ filterSigFile (optPuids opts) content
+    content <- input sigFile
+    puids <- collectPuids opts
+    output (optOutFile opts) $ filterSigFile puids content
 
