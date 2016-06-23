@@ -5,11 +5,19 @@ import System.Console.GetOpt
 import System.Exit
 import Control.Monad (when)
 import Data.Maybe (listToMaybe)
+import Data.List (intercalate)
 import DroidSignatureFileFilter
 
 -- | Construct a usage message header.
 header :: String -> String
-header progName = "Usage: " ++ progName ++ " [options] [signature file]"
+header progName = intercalate "\n"
+    [ "The DROID Signature File Minimizer - filter a signature file based on"
+    , "a list of PUIDs and keep only entries for those file formats that you"
+    , "really need."
+    , ""
+    , "Usage: " ++ progName ++ " [options] [signature-file]"
+    , ""
+    ]
 
 -- | Data type for command line options.
 data Options = Options
@@ -37,7 +45,7 @@ options =
         "show help message"
     , Option ['p'] ["puid"]
         (ReqArg (\p opts -> opts { optPuids = p : optPuids opts }) "PUID")
-        "PUID to include in the output"
+        "include file format with this PUID in the output"
     , Option ['P'] ["puids-from-file"]
         (ReqArg (\f opts -> opts { optPuidsFile = Just f }) "FILE")
         "like -p, but read list of PUIDs from file (one PUID per line)"
