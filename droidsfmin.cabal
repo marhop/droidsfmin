@@ -3,7 +3,7 @@
 
 name:                droidsfmin
 version:             0.0.0
-synopsis:            Filter DROID signature file for a list of PUIDs.
+synopsis:            Filter DROID signature file based on a list of PUIDs.
 -- description:         TODO
 homepage:            http://martin.hoppenheit.info/code/droidsfmin
 license:             BSD3
