@@ -47,10 +47,10 @@ options =
     ]
 
 -- | Parse command line options.
-parseArgs :: String -> [String] -> IO (Options, Maybe FilePath)
+parseArgs :: String -> [String] -> (Options, Maybe FilePath)
 parseArgs hdr argv =
     case getOpt Permute options argv of
-        (os, as, []) -> return (foldr id defaultOptions os, listToMaybe as)
+        (os, as, []) -> (foldr id defaultOptions os, listToMaybe as)
         (_, _, es)   -> error $ concat es ++ usageInfo hdr options
 
 -- | Read from a file or from STDIN if no file is specified.
@@ -76,7 +76,7 @@ collectPuids opts = do
 
 main = do
     prg <- getProgName
-    (opts, sigFile) <- getArgs >>= parseArgs (header prg)
+    (opts, sigFile) <- fmap (parseArgs $ header prg) getArgs
     when (optHelp opts) $ do
         putStr $ usageInfo (header prg) options
         exitSuccess
