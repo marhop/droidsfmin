@@ -93,3 +93,8 @@ You may create a source distribution (i.e., a `*.tar.gz` or `*.zip` file) with
 the `cabal sdist` command, for example to move the whole stuff from your Linux
 development system to a Windows system for building a Windows executable.
 
+# References
+
+Kudos to the <https://github.com/KOST-CECO/KaD_SignatureFile> project where
+the idea this tool is based on was already manually implemented.
+
