@@ -21,35 +21,40 @@ header progName = intercalate "\n"
 
 -- | Data type for command line options.
 data Options = Options
-    { optHelp      :: Bool
-    , optPuids     :: [String]
-    , optPuidsFile :: Maybe FilePath
-    , optOutFile   :: Maybe FilePath
+    { optHelp       :: Bool
+    , optPuids      :: [String]
+    , optPuidsFile  :: Maybe FilePath
+    , optSupertypes :: Bool
+    , optOutFile    :: Maybe FilePath
     } deriving (Show)
 
 -- | Default vaules for command line options.
 defaultOptions :: Options
 defaultOptions = Options
-    { optHelp      = False
-    , optPuids     = []
-    , optPuidsFile = Nothing
-    , optOutFile   = Nothing
+    { optHelp       = False
+    , optPuids      = []
+    , optPuidsFile  = Nothing
+    , optSupertypes = False
+    , optOutFile    = Nothing
     }
 
 -- | Description of the command line options and how to merge the supplied
 -- options with the default values by transforming an Options record.
 options :: [OptDescr (Options -> Options)]
 options =
-    [ Option ['h'] ["help"]
+    [ Option "h" ["help"]
         (NoArg (\opts -> opts { optHelp = True }))
         "show help message"
-    , Option ['p'] ["puid"]
+    , Option "p" ["puid"]
         (ReqArg (\p opts -> opts { optPuids = p : optPuids opts }) "PUID")
         "include file format with this PUID in the output"
-    , Option ['P'] ["puids-from-file"]
+    , Option "P" ["puids-from-file"]
         (ReqArg (\f opts -> opts { optPuidsFile = Just f }) "FILE")
         "like -p, but read list of PUIDs from file (one PUID per line)"
-    , Option ['o'] ["output"]
+    , Option "" ["include-supertypes"]
+        (NoArg (\opts -> opts { optSupertypes = True }))
+        "include file formats that are supertypes of the selected formats"
+    , Option "o" ["output"]
         (ReqArg (\f opts -> opts { optOutFile = Just f }) "FILE")
         "output file"
     ]
@@ -90,5 +95,6 @@ main = do
         exitSuccess
     content <- input sigFile
     puids <- collectPuids opts
-    output (optOutFile opts) $ filterSigFile puids content
+    let filterOpts = [WithSupertypes | optSupertypes opts]
+    output (optOutFile opts) $ filterSigFile filterOpts puids content
 

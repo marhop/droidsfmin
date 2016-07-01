@@ -16,7 +16,8 @@ sufficient to just label them as "unknown file format" and treat them as
 corrupt data that has to be revised.
 
 Such a restriction of a signature file based on a list of [PUID]s (denoting
-the accepted file formats) can be automated by the `droidsfmin` tool.
+the accepted file formats) can be automated by the DROID Signature File
+Minimizer, or `droidsfmin`.
 
 [DROID]: https://www.nationalarchives.gov.uk/information-management/manage-information/preserving-digital-records/droid/
 [PRONOM]: https://www.nationalarchives.gov.uk/PRONOM
@@ -24,11 +25,13 @@ the accepted file formats) can be automated by the `droidsfmin` tool.
 
 # Usage
 
-The `droidsfmin` tool is a command line tool. It is a standalone executable
-(compiling see below, TODO offer public download of executables) meaning it
-needs no installation but may be run directly. Put it into some directory,
-`cd` there (or put it in your `$PATH`) and run the following command to get a
-nice and helpful message:
+## Basic features
+
+The DROID Signature File Minimizer is a command line tool. It is a standalone
+executable (compiling see below, TODO offer public download of executables)
+meaning it needs no installation but may be run directly. Put it into some
+directory, `cd` there (or put it in your `$PATH`) and run the following
+command to get a nice and helpful message:
 
     $ droidsfmin -h
 
@@ -43,6 +46,8 @@ nice and helpful message:
                                      output
     -P FILE  --puids-from-file=FILE  like -p, but read list of PUIDs from file
                                      (one PUID per line)
+             --include-supertypes    include file formats that are supertypes
+                                     of the selected formats
     -o FILE  --output=FILE           output file
 
 Suppose you have a signature file `DROID_SignatureFile_V84.xml`. The following
@@ -67,6 +72,21 @@ The `-p` and `-P` options may also be combined:
 
 If you don't specify input/output files then `droidsfmin` will read from STDIN
 and write to STDOUT, just like any decent command line tool would.
+
+## Advanced features
+
+The `--include-supertypes` option will include all file formats that are
+direct or indirect supertypes of one of the selected formats. That means
+selecting fmt/354 (PDF/A-1b) will implicitly also include fmt/18 (PDF 1.4),
+amongst others. The sub/supertype information is expressed in the signature
+file element `HasPriorityOverFileFormatID` of the subtype and has the
+semantics "subtype has priority over supertype".
+
+Including supertypes is pretty useless in minimizing a signature file because
+supertypes have a lower priority and thus can never "win" against one of their
+subtypes, so we can safely ignore them. However, this feature may be useful
+when analyzing the relationship between several file formats in a given
+signature file.
 
 # Building an executable file
 
@@ -97,4 +117,8 @@ development system to a Windows system for building a Windows executable.
 
 Kudos to the <https://github.com/KOST-CECO/KaD_SignatureFile> project where
 the idea this tool is based on was already manually implemented.
+
+The DROID Signature File Minimizer - filter a signature file based on
+a list of PUIDs and keep only entries for those file formats that you
+really need.
 
