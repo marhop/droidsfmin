@@ -4,6 +4,7 @@ module DroidSignatureFileFilter
 ) where
 
 import Text.XML.Light
+import Data.List (nub)
 
 -- | Configuration options for the `filterSigFile` function.
 data FilterOption = WithSupertypes deriving (Eq)
@@ -23,7 +24,7 @@ filterSigFile opts puids xml = case parseXMLDoc xml of
             isc  = head $ findChildren (mkNm "InternalSignatureCollection") e
             ffc  = head $ findChildren (mkNm "FileFormatCollection") e
             ffs  = filterChildrenByAttr "PUID" puids ffc
-            ffc' = replaceChildren ffc $ ffs
+            ffc' = replaceChildren ffc $ nub $ ffs
                    ++ if WithSupertypes `elem` opts
                         then supertypes ffc ffs
                         else []
@@ -74,4 +75,14 @@ sfNamespace = "http://www.nationalarchives.gov.uk/pronom/SignatureFile"
 -- namespace.
 mkNm :: String -> QName
 mkNm n = QName n (Just sfNamespace) Nothing
+
+-- | Test two elements for equality. N.B., in this context two elements are
+-- considered equal if their `ID` attributes have the same value. If one or
+-- both (!) elements do not have an `ID` attribute they are not considered
+-- equal.
+instance Eq Element where
+    x == y =
+        case map (findAttr (unqual "ID")) [x,y] of
+            [Nothing, Nothing] -> False
+            [xID,     yID    ] -> xID == yID
 
