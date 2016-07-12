@@ -1,10 +1,13 @@
 module DroidSignatureFileFilter
 ( FilterOption(..)
 , filterSigFile
+, listFileFormats
 ) where
 
 import Text.XML.Light
 import Data.List (nub)
+import Data.List (intercalate)
+import Data.Maybe (fromMaybe)
 
 -- | Configuration options for the `filterSigFile` function.
 data FilterOption = WithSupertypes deriving (Eq)
@@ -30,6 +33,23 @@ filterSigFile opts puids xml = case parseXMLDoc xml of
                         else []
             ids  = concatMap sigIDs $ findChildren (mkNm "FileFormat") ffc'
             isc' = replaceChildren isc $ filterChildrenByAttr "ID" ids isc
+
+-- | List the file formats that occur in an XML string representing a DROID
+-- signature file. Each file format is represented by a string of the form
+-- "PUID <tab> Name <tab> Version".
+listFileFormats :: String -> [String]
+listFileFormats ""  = []
+listFileFormats xml = case parseXMLDoc xml of
+    Nothing -> error "Failed to parse signature file."
+    Just e  -> map showFileFormat ffs
+        where
+            ffc = head $ findChildren (mkNm "FileFormatCollection") e
+            ffs = findChildren (mkNm "FileFormat") ffc
+            showFileFormat ff = intercalate "\t"
+                [ fromMaybe "" $ findAttr (unqual "PUID") ff
+                , fromMaybe "" $ findAttr (unqual "Name") ff
+                , fromMaybe "" $ findAttr (unqual "Version") ff
+                ]
 
 -- | Replace all content of an element by appending a list of elements as
 -- children.

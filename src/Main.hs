@@ -25,6 +25,7 @@ data Options = Options
     , optPuids      :: [String]
     , optPuidsFile  :: Maybe FilePath
     , optSupertypes :: Bool
+    , optList       :: Bool
     , optOutFile    :: Maybe FilePath
     } deriving (Show)
 
@@ -35,6 +36,7 @@ defaultOptions = Options
     , optPuids      = []
     , optPuidsFile  = Nothing
     , optSupertypes = False
+    , optList       = False
     , optOutFile    = Nothing
     }
 
@@ -54,6 +56,9 @@ options =
     , Option "" ["include-supertypes"]
         (NoArg (\opts -> opts { optSupertypes = True }))
         "include file formats that are supertypes of the selected formats"
+    , Option "l" ["list"]
+        (NoArg (\opts -> opts { optList = True }))
+        "return a list of PUIDs instead of XML"
     , Option "o" ["output"]
         (ReqArg (\f opts -> opts { optOutFile = Just f }) "FILE")
         "output file"
@@ -96,5 +101,7 @@ main = do
     content <- input sigFile
     puids <- collectPuids opts
     let filterOpts = [WithSupertypes | optSupertypes opts]
-    output (optOutFile opts) $ filterSigFile filterOpts puids content
+    output (optOutFile opts) $
+        (if optList opts then intercalate "\n" . listFileFormats else id) $
+        filterSigFile filterOpts puids content
 

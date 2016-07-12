@@ -48,11 +48,17 @@ command to get a nice and helpful message:
                                      (one PUID per line)
              --include-supertypes    include file formats that are supertypes
                                      of the selected formats
+    -l       --list                  return a list of PUIDs instead of XML
     -o FILE  --output=FILE           output file
 
 Suppose you have a signature file `DROID_SignatureFile_V84.xml`. The following
-command will create a new signature file that contains entries only for the
-formats `x-fmt/111` (plain text) and `fmt/95` (PDF/A-1a):
+command will output a list of all file formats that occur in the signature
+file, giving you an overview of its content:
+
+    $ droidsfmin -l DROID_SignatureFile_V84.xml
+
+The following command will create a new signature file that contains entries
+only for the formats `x-fmt/111` (plain text) and `fmt/95` (PDF/A-1a):
 
     $ droidsfmin -p x-fmt/111 -p fmt/95 DROID_SignatureFile_V84.xml
 
@@ -86,7 +92,10 @@ Including supertypes is pretty useless in minimizing a signature file because
 supertypes have a lower priority and thus can never "win" against one of their
 subtypes, so we can safely ignore them. However, this feature may be useful
 when analyzing the relationship between several file formats in a given
-signature file.
+signature file. For example, the following command will output a list of all
+direct or indirect supertypes of the PDF/A-1b format:
+
+    $ droidsfmin --list -p fmt/354 --include-supertypes DROID_SignatureFile_V84.xml
 
 # Building an executable file
 
@@ -117,8 +126,4 @@ development system to a Windows system for building a Windows executable.
 
 Kudos to the <https://github.com/KOST-CECO/KaD_SignatureFile> project where
 the idea this tool is based on was already manually implemented.
-
-The DROID Signature File Minimizer - filter a signature file based on
-a list of PUIDs and keep only entries for those file formats that you
-really need.
 
