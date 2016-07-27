@@ -48,6 +48,8 @@ command to get a nice and helpful message:
                                      (one PUID per line)
              --include-supertypes    include file formats that are supertypes
                                      of the selected formats
+             --include-subtypes      include file formats that are subtypes of
+                                     the selected formats
     -l       --list                  return a list of PUIDs instead of XML
     -o FILE  --output=FILE           output file
 
@@ -55,7 +57,7 @@ Suppose you have a signature file `DROID_SignatureFile_V84.xml`. The following
 command will output a list of all file formats that occur in the signature
 file, giving you an overview of its content:
 
-    $ droidsfmin -l DROID_SignatureFile_V84.xml
+    $ droidsfmin --list DROID_SignatureFile_V84.xml
 
 The following command will create a new signature file that contains entries
 only for the formats `x-fmt/111` (plain text) and `fmt/95` (PDF/A-1a):
@@ -83,19 +85,39 @@ and write to STDOUT, just like any decent command line tool would.
 
 The `--include-supertypes` option will include all file formats that are
 direct or indirect supertypes of one of the selected formats. That means
-selecting fmt/354 (PDF/A-1b) will implicitly also include fmt/18 (PDF 1.4),
-amongst others. The sub/supertype information is expressed in the signature
-file element `HasPriorityOverFileFormatID` of the subtype and has the
-semantics "subtype has priority over supertype".
+selecting fmt/354 (PDF/A-1b) will implicitly also include fmt/18 (PDF 1.4, on
+which PDF/A-1 is based), amongst others.
 
-Including supertypes is pretty useless in minimizing a signature file because
-supertypes have a lower priority and thus can never "win" against one of their
-subtypes, so we can safely ignore them. However, this feature may be useful
-when analyzing the relationship between several file formats in a given
-signature file. For example, the following command will output a list of all
-direct or indirect supertypes of the PDF/A-1b format:
+Likewise, the `--include-subtypes` option will include all file formats that
+are direct or indirect subtypes of one of the selected formats. That means
+selecting fmt/18 (PDF 1.4) will implicitly also include fmt/354 (PDF/A-1b,
+which is based on PDF 1.4), amongst others. Yes, this is like
+`--include-supertypes` the other way around.
+
+Using both `--include-supertypes` and `--include-subtypes` together will yield
+only (direct and indirect) supertypes and subtypes of the *given* formats
+(`--puid` or `--puids-from-file`). It will *not* collect all supertypes of
+subtypes of ..., since that path quickly leads to madness.
+
+These options are primarily useful when analyzing the relationship between
+several file formats in a given signature file. (Particularly, including
+supertypes is pretty useless in minimizing a signature file because supertypes
+have a lower priority and thus can never "win" against one of their subtypes,
+so we can safely ignore them.) For example, the following command will output
+a list of all direct or indirect supertypes of the PDF/A-1b format:
 
     $ droidsfmin --list -p fmt/354 --include-supertypes DROID_SignatureFile_V84.xml
+
+The sub/supertype information is expressed in the signature file element
+`HasPriorityOverFileFormatID` of the subtype and has the semantics "subtype
+has priority over supertype". Actually, priority is used not only for
+sub/supertype relationships in the DROID signature file but in a more general
+form: For example, both PDF/A-1b and PDF 1.5 have priority over PDF 1.4. But
+while PDF/A-1b may well be regarded as a subtype of PDF 1.4, PDF 1.5 is merely
+a newer version! I am aware of the semantic imprecision introduced by this
+simplification, but since `--include-formats-with-higher-priority` would make
+a considerably less memorable option name, I am willing to live with this
+shame.
 
 # Building an executable file
 

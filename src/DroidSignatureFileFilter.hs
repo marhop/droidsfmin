@@ -5,12 +5,11 @@ module DroidSignatureFileFilter
 ) where
 
 import Text.XML.Light
-import Data.List (nub)
-import Data.List (intercalate)
+import Data.List (nub, intercalate)
 import Data.Maybe (fromMaybe)
 
 -- | Configuration options for the `filterSigFile` function.
-data FilterOption = WithSupertypes deriving (Eq)
+data FilterOption = WithSupertypes | WithSubtypes deriving (Eq)
 
 -- | Filter an XML string representing a DROID signature file based on a list
 -- of PUIDs. Only those entries (file format and internal signature
@@ -28,9 +27,12 @@ filterSigFile opts puids xml = case parseXMLDoc xml of
             ffc  = head $ findChildren (mkNm "FileFormatCollection") e
             ffs  = filterChildrenByAttr "PUID" puids ffc
             ffc' = replaceChildren ffc $ nub $ ffs
-                   ++ if WithSupertypes `elem` opts
+                   ++ (if WithSupertypes `elem` opts
                         then supertypes ffc ffs
-                        else []
+                        else [])
+                   ++ (if WithSubtypes `elem` opts
+                        then subtypes ffc ffs
+                        else [])
             ids  = concatMap sigIDs $ findChildren (mkNm "FileFormat") ffc'
             isc' = replaceChildren isc $ filterChildrenByAttr "ID" ids isc
 
@@ -66,11 +68,6 @@ filterChildrenByAttr a vs = filterChildren (f . findAttr (unqual a))
         f (Just v) = v `elem` vs
         f Nothing  = False
 
--- | Find the file format IDs of all file formats that are immediate
--- supertypes of a given element. The element should be of type `FileFormat`.
-supFmtIDs :: Element -> [String]
-supFmtIDs = map strContent . findChildren (mkNm "HasPriorityOverFileFormatID")
-
 -- | Find the file formats in a given file format collection that are (direct
 -- or indirect) supertypes of one of the given elements. The file format
 -- collection should be of type `FileFormatCollection`, the elements should be
@@ -81,12 +78,47 @@ supertypes ffc es = supertypes' ffc es []
 supertypes' :: Element -> [Element] -> [Element] -> [Element]
 supertypes' _   [] acc = acc
 supertypes' ffc es acc = supertypes' ffc es' (acc ++ es')
-    where es' = filterChildrenByAttr "ID" (concatMap supFmtIDs es) ffc
+    where es' = filterChildren (\ff -> any (ff `isSupertypeOf`) es) ffc
+
+-- | Find the file formats in a given file format collection that are (direct
+-- or indirect) subtypes of one of the given elements. The file format
+-- collection should be of type `FileFormatCollection`, the elements should be
+-- of type `FileFormat`.
+subtypes :: Element -> [Element] -> [Element]
+subtypes ffc es = subtypes' ffc es []
+
+subtypes' :: Element -> [Element] -> [Element] -> [Element]
+subtypes' _   [] acc = acc
+subtypes' ffc es acc = subtypes' ffc es' (acc ++ es')
+    where es' = filterChildren (\ff -> any (ff `isSubtypeOf`) es) ffc
+
+-- | Find the file format ID of a given element. The element should be of type
+-- `FileFormat`. If the element has no `ID` attribute the empty string is
+-- returned.
+fmtID :: Element -> String
+fmtID = fromMaybe "" . findAttr (unqual "ID")
 
 -- | Find all internal signature IDs that are referenced by a given element.
 -- The element should be of type `FileFormat`.
 sigIDs :: Element -> [String]
 sigIDs = map strContent . findChildren (mkNm "InternalSignatureID")
+
+-- | Find the file format IDs of all file formats that are immediate
+-- supertypes of a given element. The element should be of type `FileFormat`.
+supFmtIDs :: Element -> [String]
+supFmtIDs = map strContent . findChildren (mkNm "HasPriorityOverFileFormatID")
+
+-- | Check if a file format x (a `FileFormat` element) is a supertype of
+-- another file format y, i.e., if the relation `y HasPriorityOverFileFormatID
+-- x` holds.
+isSupertypeOf :: Element -> Element -> Bool
+x `isSupertypeOf` y = fmtID x `elem` supFmtIDs y
+
+-- | Check if a file format x (a `FileFormat` element) is a subtype of another
+-- file format y, i.e., if the relation `x HasPriorityOverFileFormatID y`
+-- holds.
+isSubtypeOf :: Element -> Element -> Bool
+isSubtypeOf = flip isSupertypeOf
 
 -- | The DROID signature file namespace string.
 sfNamespace = "http://www.nationalarchives.gov.uk/pronom/SignatureFile"
