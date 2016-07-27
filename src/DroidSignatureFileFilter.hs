@@ -73,24 +73,25 @@ filterChildrenByAttr a vs = filterChildren (f . findAttr (unqual a))
 -- collection should be of type `FileFormatCollection`, the elements should be
 -- of type `FileFormat`.
 supertypes :: Element -> [Element] -> [Element]
-supertypes ffc es = supertypes' ffc es []
-
-supertypes' :: Element -> [Element] -> [Element] -> [Element]
-supertypes' _   [] acc = acc
-supertypes' ffc es acc = supertypes' ffc es' (acc ++ es')
-    where es' = filterChildren (\ff -> any (ff `isSupertypeOf`) es) ffc
+supertypes = related isSupertypeOf
 
 -- | Find the file formats in a given file format collection that are (direct
 -- or indirect) subtypes of one of the given elements. The file format
 -- collection should be of type `FileFormatCollection`, the elements should be
 -- of type `FileFormat`.
 subtypes :: Element -> [Element] -> [Element]
-subtypes ffc es = subtypes' ffc es []
+subtypes = related isSubtypeOf
 
-subtypes' :: Element -> [Element] -> [Element] -> [Element]
-subtypes' _   [] acc = acc
-subtypes' ffc es acc = subtypes' ffc es' (acc ++ es')
-    where es' = filterChildren (\ff -> any (ff `isSubtypeOf`) es) ffc
+-- | Find the file formats in a given file format collection that are
+-- (directly or indirectly) related to one of the given file formats with
+-- respect to a given predicate. The file format collection should be of type
+-- `FileFormatCollection`, the elements should be of type `FileFormat`.
+related :: (Element -> Element -> Bool) -> Element -> [Element] -> [Element]
+related pred ffc es = related' pred ffc es []
+    where
+        related' _    _   [] acc = acc
+        related' pred ffc es acc = related' pred ffc es' (acc ++ es')
+            where es' = filterChildren (\ff -> any (pred ff) es) ffc
 
 -- | Find the file format ID of a given element. The element should be of type
 -- `FileFormat`. If the element has no `ID` attribute the empty string is
