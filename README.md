@@ -46,11 +46,11 @@ command to get a nice and helpful message:
                                      output
     -P FILE  --puids-from-file=FILE  like -p, but read list of PUIDs from file
                                      (one PUID per line)
-             --include-supertypes    include file formats that are supertypes
-                                     of the selected formats
-             --include-subtypes      include file formats that are subtypes of
-                                     the selected formats
     -l       --list                  return a list of PUIDs instead of XML
+    -S       --include-supertypes    include file formats that are supertypes
+                                     of the selected formats
+    -s       --include-subtypes      include file formats that are subtypes of
+                                     the selected formats
     -o FILE  --output=FILE           output file
 
 Suppose you have a signature file `DROID_SignatureFile_V84.xml`. The following

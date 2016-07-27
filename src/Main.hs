@@ -24,9 +24,9 @@ data Options = Options
     { optHelp       :: Bool
     , optPuids      :: [String]
     , optPuidsFile  :: Maybe FilePath
+    , optList       :: Bool
     , optSupertypes :: Bool
     , optSubtypes   :: Bool
-    , optList       :: Bool
     , optOutFile    :: Maybe FilePath
     } deriving (Show)
 
@@ -36,9 +36,9 @@ defaultOptions = Options
     { optHelp       = False
     , optPuids      = []
     , optPuidsFile  = Nothing
+    , optList       = False
     , optSupertypes = False
     , optSubtypes   = False
-    , optList       = False
     , optOutFile    = Nothing
     }
 
@@ -55,15 +55,15 @@ options =
     , Option "P" ["puids-from-file"]
         (ReqArg (\f opts -> opts { optPuidsFile = Just f }) "FILE")
         "like -p, but read list of PUIDs from file (one PUID per line)"
-    , Option "" ["include-supertypes"]
-        (NoArg (\opts -> opts { optSupertypes = True }))
-        "include file formats that are supertypes of the selected formats"
-    , Option "" ["include-subtypes"]
-        (NoArg (\opts -> opts { optSubtypes = True }))
-        "include file formats that are subtypes of the selected formats"
     , Option "l" ["list"]
         (NoArg (\opts -> opts { optList = True }))
         "return a list of PUIDs instead of XML"
+    , Option "S" ["include-supertypes"]
+        (NoArg (\opts -> opts { optSupertypes = True }))
+        "include file formats that are supertypes of the selected formats"
+    , Option "s" ["include-subtypes"]
+        (NoArg (\opts -> opts { optSubtypes = True }))
+        "include file formats that are subtypes of the selected formats"
     , Option "o" ["output"]
         (ReqArg (\f opts -> opts { optOutFile = Just f }) "FILE")
         "output file"
