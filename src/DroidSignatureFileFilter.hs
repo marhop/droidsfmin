@@ -5,7 +5,7 @@ module DroidSignatureFileFilter
 ) where
 
 import Text.XML.Light
-import Data.List (nub, intercalate)
+import Data.List ((\\), nub, intercalate)
 import Data.Maybe (fromMaybe)
 
 -- | Configuration options for the 'filterSigFile' function.
@@ -107,7 +107,7 @@ related pred ffc es = related' pred ffc es []
     where
         related' _    _   [] acc = acc
         related' pred ffc es acc = related' pred ffc es' (acc ++ es')
-            where es' = filterChildren (\ff -> any (pred ff) es) ffc
+            where es' = filterChildren (\ff -> any (pred ff) es) ffc \\ acc
 
 -- | Find the file format ID of a given element. If the element has no ID
 -- attribute the empty string is returned.
