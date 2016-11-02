@@ -132,8 +132,9 @@ You need:
  3. The `droidsfmin` source files.
 
 Install the prerequisites, `cd` into the `droidsfmin` source directory and run
-the following command:
+the following commands:
 
+    $ cabal sandbox init
     $ cabal build
 
 You will find your shiny new executable somewhere below the `./dist/build`
