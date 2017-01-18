@@ -35,10 +35,11 @@ You need:
  2. [The `xml` package](http://hackage.haskell.org/package/xml).
  3. The `droidsfmin` source files.
 
-Install the prerequisites, `cd` into the `droidsfmin` source directory and run
-the following commands:
+Install the Haskell Platform, `cd` into the `droidsfmin` source directory and
+run the following commands:
 
     $ cabal sandbox init
+    $ cabal install xml
     $ cabal build
 
 You will find your shiny new executable somewhere below the `./dist/build`
